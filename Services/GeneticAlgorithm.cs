@@ -8,10 +8,12 @@ namespace TravelingSalesman.Services;
 public class GeneticAlgorithm
 {
     public List<List<Point>> population;
+    readonly Random random;
 
     public GeneticAlgorithm()
     {
         population = new();
+        random = new();
     }
 
     public List<List<Point>> GeneratePopulation(List<Point> points)
@@ -60,6 +62,62 @@ public class GeneticAlgorithm
         return populationFitnessProbs;
     }
 
+    public List<Point> Selection(List<double> fitnessProbs)
+    {
+        double[] cumsum = CumulativeSum(fitnessProbs);
+        double randomValue = random.NextDouble();
+
+        bool[] boolProbArray = new bool[cumsum.Length];
+        for (int i = 0; i< cumsum.Length; i++)
+        {
+            boolProbArray[i] = cumsum[i] < randomValue;
+        }
+
+        int selectedIndex = Array.FindLastIndex(boolProbArray, b => b == true);
+        return population[selectedIndex];
+    }
+
+    public (List<Point>, List<Point>) Crossover(List<Point> parent1, List<Point> parent2)
+    {
+        int maxCutIndex = population.Count - 1;
+        int cutIndex = random.Next(1, maxCutIndex);
+
+        List<Point> child1 = new();
+        List<Point> child2 = new();
+
+        child1.AddRange(parent1.Take(cutIndex));
+        child1.AddRange(parent2.Except(parent1));
+
+        child2.AddRange(parent2.Take(cutIndex));
+        child2.AddRange(parent2.Except(parent1));
+
+        return (child1, child2);
+    }
+
+    public List<Point> Mutation(List<Point> child)
+    {
+        int maxIndex = child.Count - 1;
+        int index1 = random.Next(1, maxIndex);
+        int index2 = random.Next(1, maxIndex);
+
+        Point temp = child[index1];
+        child[index1] = child[index2];
+        child[index2] = temp;
+        return child;
+    }
+
+
+    private static double[] CumulativeSum(List<double> sequence)
+    {
+        double sum = 0;
+        double[] cumulativeSumArray = new double[sequence.Count];
+        for (int i = 0; i < sequence.Count; i++)
+        {
+            sum += sequence[i];
+            cumulativeSumArray[i] = sum;
+        }
+        return cumulativeSumArray;
+    }
 
     private int Factorial(int number)
     {
