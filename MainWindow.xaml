@@ -16,6 +16,8 @@
             <Label Content="{Binding NodesCount}" FontSize="20" HorizontalAlignment="Center" Foreground="White"/>
             <Button Content="Draw" Foreground="White" Background="#222222" FontSize="25" Width="100" Height="auto"
                     Click="DrawButton_Click"/>
+            <Button Content="Populate" Foreground="White" Background="#222222" FontSize="25" Width="100" Height="auto"
+                    Click="PopulateButton_Click"/>
         </StackPanel>
         <Canvas Grid.Row="1" x:Name="canvas" Background="White" Width="800" Height="800" HorizontalAlignment="Center"/>
     </Grid>

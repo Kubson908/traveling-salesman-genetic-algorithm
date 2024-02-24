@@ -55,4 +55,9 @@ public partial class MainWindow : Window
             
         }
     }
+
+    private void PopulateButton_Click(object sender, RoutedEventArgs e)
+    {
+        viewModel.Populate();
+    }
 }
