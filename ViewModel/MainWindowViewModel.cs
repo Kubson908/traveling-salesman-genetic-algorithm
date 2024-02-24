@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using TravelingSalesman.MVVM;
 using TravelingSalesman.Services;
@@ -16,7 +17,7 @@ internal class MainWindowViewModel : BaseViewModel
         points = new();
     }
 
-    private int nodesCount = 3;
+    private int nodesCount = 4;
     public int NodesCount
     {
         get { return nodesCount; }
@@ -40,9 +41,23 @@ internal class MainWindowViewModel : BaseViewModel
         return points;
     }
 
-    public void Populate()
+    public List<Point> ShortestPath()
+    {
+        List<List<Point>> bestMixedChildren = geneticAlgorithm.RunAlgorithm(points);
+
+        List<double> totalDistances = new();
+        for (int i = 0; i < bestMixedChildren.Count; i++)
+        {
+            totalDistances.Add(geneticAlgorithm.TotalDistance(bestMixedChildren[i]));
+        }
+        int indexMin = totalDistances.IndexOf(totalDistances.Min());
+        List<Point> shortestPath = bestMixedChildren[indexMin];
+        return shortestPath;
+    }
+
+    /*public void Populate()
     {
         var population = geneticAlgorithm.GeneratePopulation(points);
         return;
-    }
+    }*/
 }

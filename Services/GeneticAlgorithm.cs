@@ -9,11 +9,99 @@ public class GeneticAlgorithm
 {
     public List<List<Point>> population;
     readonly Random random;
+    private readonly float crossoverRate = 0.8f;
+    private readonly float mutationRate = 0.2f;
+    private readonly int generations = 100;
 
     public GeneticAlgorithm()
     {
         population = new();
         random = new();
+    }
+
+    public List<List<Point>> RunAlgorithm(List<Point> points)
+    {
+        population.Clear();
+        population = GeneratePopulation(points);
+        List<double> fitnessProbs = FitnessProbability(population);
+
+        List<List<Point>> parentsList = new();
+
+        for (int i = 0; i < population.Count * crossoverRate; i++)
+        {
+            parentsList.Add(Selection(fitnessProbs, population));
+        }
+
+        List<List<Point>> childrenList = new();
+
+        for (int i = 0; i < parentsList.Count; i += 2)
+        {
+            (List<Point> child1, List<Point> child2) = Crossover(parentsList[i], parentsList[i + 1], population);
+            double mutate_threshold = random.NextDouble();
+            if (mutate_threshold > (1 - mutationRate))
+                child1 = Mutation(child1);
+
+            mutate_threshold = random.NextDouble();
+            if (mutate_threshold > (1 - mutationRate))
+                child2 = Mutation(child2);
+
+            childrenList.Add(child1);
+            childrenList.Add(child2);
+        }
+
+        List<List<Point>> mixedList = parentsList.Concat(childrenList).ToList();
+
+        fitnessProbs.Clear();
+        fitnessProbs = FitnessProbability(mixedList);
+        List<int> sortedFitnessIndices = Enumerable.Range(0, mixedList.Count)
+            .OrderByDescending(i => fitnessProbs[i]).ToList();
+
+        List<List<Point>> bestOfMixedList = sortedFitnessIndices.Take(population.Count)
+            .Select(i => mixedList[i]).ToList();
+
+        for (int i = 0; i < generations; i++)
+        {
+            fitnessProbs = FitnessProbability(bestOfMixedList);
+            parentsList.Clear();
+            for (int j = 0; j < crossoverRate * population.Count; j++)
+            {
+                parentsList.Add(Selection(fitnessProbs, bestOfMixedList));
+            }
+
+            childrenList.Clear();
+            for (int j = 0; j < parentsList.Count; j += 2)
+            {
+                (List<Point> child1, List<Point> child2) = Crossover(parentsList[j], parentsList[j + 1], bestOfMixedList);
+                double mutate_threshold = random.NextDouble();
+                if (mutate_threshold > (1 - mutationRate))
+                    child1 = Mutation(child1);
+
+                mutate_threshold = random.NextDouble();
+                if (mutate_threshold > (1 - mutationRate))
+                    child2 = Mutation(child2);
+
+                childrenList.Add(child1);
+                childrenList.Add(child2);
+            }
+
+            mixedList = parentsList.Concat(childrenList).ToList();
+            fitnessProbs.Clear();
+            fitnessProbs = FitnessProbability(mixedList);
+            sortedFitnessIndices = Enumerable.Range(0, mixedList.Count)
+                .OrderByDescending(i => fitnessProbs[i]).ToList();
+            bestOfMixedList = sortedFitnessIndices.Take((int)(crossoverRate * population.Count))
+                .Select(i => mixedList[i]).ToList();
+            List<int> oldPopulationIndices = Enumerable.Range(0, (int)(mutationRate * population.Count))
+                .Select(_ => random.Next(0, population.Count)).ToList();
+
+            foreach (int index in oldPopulationIndices)
+            {
+                bestOfMixedList.Add(population[index]);
+            }
+
+            bestOfMixedList = bestOfMixedList.OrderBy(_ => random.Next()).ToList();
+        }
+        return bestOfMixedList;
     }
 
     public List<List<Point>> GeneratePopulation(List<Point> points)
@@ -38,7 +126,7 @@ public class GeneticAlgorithm
     public double TotalDistance(List<Point> points)
     {
         double total = 0;
-        for (int i = 0; i < population.Count; i++)
+        for (int i = 0; i < points.Count; i++)
         {
             if (i == points.Count - 1)
                 total += Distance(points[i], points[0]);
@@ -48,12 +136,12 @@ public class GeneticAlgorithm
         return total;
     }
 
-    public List<double> FitnessProbability()
+    public List<double> FitnessProbability(List<List<Point>> selection)
     {
         List<double> totalDistances = new();
-        for (int i = 0; i < population.Count; i++)
+        for (int i = 0; i < selection.Count; i++)
         {
-            totalDistances.Add(TotalDistance(population[i]));
+            totalDistances.Add(TotalDistance(selection[i]));
         }
         double maxDistance = totalDistances.Max();
         List<double> populationFitness = totalDistances.Select(e => maxDistance - e).ToList();
@@ -62,7 +150,7 @@ public class GeneticAlgorithm
         return populationFitnessProbs;
     }
 
-    public List<Point> Selection(List<double> fitnessProbs)
+    public List<Point> Selection(List<double> fitnessProbs, List<List<Point>> selection)
     {
         double[] cumsum = CumulativeSum(fitnessProbs);
         double randomValue = random.NextDouble();
@@ -74,22 +162,22 @@ public class GeneticAlgorithm
         }
 
         int selectedIndex = Array.FindLastIndex(boolProbArray, b => b == true);
-        return population[selectedIndex];
+        return selectedIndex != -1 ? selection[selectedIndex] : selection[Array.IndexOf(cumsum, cumsum.Min())];
     }
 
-    public (List<Point>, List<Point>) Crossover(List<Point> parent1, List<Point> parent2)
+    public (List<Point>, List<Point>) Crossover(List<Point> parent1, List<Point> parent2, List<List<Point>> selection)
     {
-        int maxCutIndex = population.Count - 1;
+        int maxCutIndex = parent1.Count - 1;
         int cutIndex = random.Next(1, maxCutIndex);
 
         List<Point> child1 = new();
         List<Point> child2 = new();
 
         child1.AddRange(parent1.Take(cutIndex));
-        child1.AddRange(parent2.Except(parent1));
+        child1.AddRange(parent2.Except(child1));
 
         child2.AddRange(parent2.Take(cutIndex));
-        child2.AddRange(parent2.Except(parent1));
+        child2.AddRange(parent1.Except(child2));
 
         return (child1, child2);
     }
@@ -100,11 +188,11 @@ public class GeneticAlgorithm
         int index1 = random.Next(1, maxIndex);
         int index2 = random.Next(1, maxIndex);
 
-        Point temp = child[index1];
-        child[index1] = child[index2];
-        child[index2] = temp;
+        (child[index2], child[index1]) = (child[index1], child[index2]);
         return child;
     }
+
+
 
 
     private static double[] CumulativeSum(List<double> sequence)
