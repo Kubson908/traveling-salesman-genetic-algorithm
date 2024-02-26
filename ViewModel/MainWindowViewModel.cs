@@ -28,9 +28,21 @@ internal class MainWindowViewModel : BaseViewModel
         }
     }
 
+    private double? distance = null;
+    public double? Distance
+    {
+        get { return distance; }
+        set
+        {
+            distance = value;
+            OnPropertyChanged();
+        }
+    }
+
     public List<Point> GeneratePointArray()
     {
         var random = new Random();
+        Distance = null;
         points.Clear();
         for (int i = 0; i < NodesCount; i++)
         {
@@ -50,14 +62,18 @@ internal class MainWindowViewModel : BaseViewModel
         {
             totalDistances.Add(geneticAlgorithm.TotalDistance(bestMixedChildren[i]));
         }
-        int indexMin = totalDistances.IndexOf(totalDistances.Min());
+        double minDistance = totalDistances.Min();
+        if (Distance != null && minDistance < Distance)
+        {
+            Distance = minDistance;
+        }
+        int indexMin = totalDistances.IndexOf(minDistance);
         List<Point> shortestPath = bestMixedChildren[indexMin];
         return shortestPath;
     }
 
-    /*public void Populate()
+    public void SetDistance(List<Point> path)
     {
-        var population = geneticAlgorithm.GeneratePopulation(points);
-        return;
-    }*/
+        Distance = geneticAlgorithm.TotalDistance(path);
+    }
 }

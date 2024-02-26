@@ -3,22 +3,32 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TravelingSalesman"
         mc:Ignorable="d"
-        Title="MainWindow" Width="1000" Height="1000">
+        Title="Salesman problem" Width="1000" Height="1000" WindowState="Maximized">
     <Grid Background="#333333">
         <Grid.RowDefinitions>
             <RowDefinition Height="15*" />
             <RowDefinition Height="85*" />
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-            <Slider  Width="300" Minimum="4" Maximum="20" Value="{Binding NodesCount}"/>
-            <Label Content="{Binding NodesCount}" FontSize="20" HorizontalAlignment="Center" Foreground="White"/>
-            <Button Content="Draw" Foreground="White" Background="#222222" FontSize="25" Width="100" Height="auto"
-                    Click="DrawButton_Click"/>
-            <Button Content="Calculate" Foreground="White" Background="#222222" FontSize="25" Width="100" Height="auto"
-                    Click="CalculateButton_Click"/>
-        </StackPanel>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Grid.Column="1">
+                <Slider  Width="300" Minimum="4" Maximum="20" Value="{Binding NodesCount}"/>
+                <Label Content="{Binding NodesCount}" FontSize="20" HorizontalAlignment="Center" Foreground="White"/>
+                <Button Content="Draw" Foreground="White" Background="#222222" FontSize="25" Width="150" Height="auto"
+                        Click="DrawButton_Click" Margin="5"/>
+                <Button Content="Calculate" Foreground="White" Background="#222222" FontSize="25" Width="150" Height="auto"
+                        Click="CalculateButton_Click" Margin="5"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="{Binding Distance}" FontSize="20" Foreground="White" />
+            </StackPanel>
+        </Grid>
+       
         <Canvas Grid.Row="1" x:Name="canvas" Background="White" Width="800" Height="800" HorizontalAlignment="Center"/>
     </Grid>
 </Window>

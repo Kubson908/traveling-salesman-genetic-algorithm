@@ -10,24 +10,32 @@ namespace TravelingSalesman;
 public partial class MainWindow : Window
 {
     private readonly MainWindowViewModel viewModel;
+    private double? distance;
     public MainWindow()
     {
         InitializeComponent();
         viewModel = new MainWindowViewModel();
         DataContext = viewModel;
+        distance = null;
     }
 
     private void DrawButton_Click(object sender, RoutedEventArgs e)
     {
         canvas.Children.Clear();
-        List<Point> points = viewModel.GeneratePointArray();
-        DrawPath(points);
+        List<Point> path = viewModel.GeneratePointArray();
+        distance = null;
+        viewModel.SetDistance(path);
+        DrawPath(path);
     }
 
     private void CalculateButton_Click(object sender, RoutedEventArgs e)
     {
-        List<Point> path = viewModel.ShortestPath();
-        DrawPath(path);
+        List<Point> newPath = viewModel.ShortestPath();
+        if (distance == null || viewModel.Distance < distance)
+        {
+            distance = viewModel.Distance;
+            DrawPath(newPath);
+        }
     }
 
     private void DrawPath(List<Point> path)
@@ -39,12 +47,19 @@ public partial class MainWindow : Window
             Ellipse circle = new Ellipse();
             circle.Height = circle.Width = 10;
             circle.Fill = Brushes.Red;
-            Line line = new Line();
-            line.Stroke = Brushes.Black;
-            line.StrokeThickness = 2;
             canvas.Children.Add(circle);
             Canvas.SetTop(circle, path[i].Y - 5);
             Canvas.SetLeft(circle, path[i].X - 5);
+            
+
+            Line line = new()
+            {
+                Stroke = Brushes.Black,
+                StrokeThickness = 2
+            };
+
+            
+            
             if (i == 0) continue;
 
             line.X1 = path[i - 1].X;
@@ -63,8 +78,25 @@ public partial class MainWindow : Window
                 lastLine.X2 = path[i].X;
                 lastLine.Y2 = path[i].Y;
                 canvas.Children.Add(lastLine);
+                AddCoords(ref canvas, path[0]);
             }
 
+            AddCoords(ref canvas, path[i]);
         }
+    }
+
+    private void AddCoords(ref Canvas canvas, Point point)
+    {
+        TextBlock coords = new()
+        {
+            Text = $"({point.X}, {point.Y})",
+            Foreground = Brushes.IndianRed,
+            FontSize = 13,
+            FontWeight = FontWeights.Bold,
+        };
+        canvas.Children.Add(coords);
+        Canvas.SetTop(coords, point.Y + 10);
+        Canvas.SetLeft(coords, point.X - 5);
+
     }
 }

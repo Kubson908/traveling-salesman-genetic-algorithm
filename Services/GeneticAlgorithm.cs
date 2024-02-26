@@ -9,9 +9,10 @@ public class GeneticAlgorithm
 {
     public List<List<Point>> population;
     readonly Random random;
+    private readonly int populationCount = 250;
     private readonly float crossoverRate = 0.8f;
     private readonly float mutationRate = 0.2f;
-    private readonly int generations = 100;
+    private readonly int generations = 200;
 
     public GeneticAlgorithm()
     {
@@ -107,8 +108,8 @@ public class GeneticAlgorithm
     public List<List<Point>> GeneratePopulation(List<Point> points)
     {
         population.Clear();
-        int factorial = Factorial(points.Count);
-        int limit = factorial < 10 ? factorial : 10;
+        long factorial = Factorial(points.Count);
+        long limit = factorial < populationCount ? factorial : populationCount;
         while (population.Count < limit)
         {
             var route = points.OrderBy(p => Random.Shared.Next()).ToList();
@@ -123,17 +124,17 @@ public class GeneticAlgorithm
         return Math.Sqrt(Math.Pow(point2.X - point1.X, 2) + Math.Pow(point2.Y - point1.Y, 2));
     }
 
-    public double TotalDistance(List<Point> points)
+    public double TotalDistance(List<Point> path)
     {
-        double total = 0;
-        for (int i = 0; i < points.Count; i++)
+        double totalDistance = 0;
+        for (int i = 0; i < path.Count; i++)
         {
-            if (i == points.Count - 1)
-                total += Distance(points[i], points[0]);
+            if (i == path.Count - 1)
+                totalDistance += Distance(path[i], path[0]);
             else
-                total += Distance(points[i], points[i+1]);
+                totalDistance += Distance(path[i], path[i+1]);
         }
-        return total;
+        return totalDistance;
     }
 
     public List<double> FitnessProbability(List<List<Point>> selection)
@@ -207,7 +208,7 @@ public class GeneticAlgorithm
         return cumulativeSumArray;
     }
 
-    private int Factorial(int number)
+    private long Factorial(int number)
     {
         if (number == 1) return 1;
         return number * Factorial(number - 1);
