@@ -35,6 +35,18 @@ internal class MainWindowViewModel : BaseViewModel
         set
         {
             distance = value;
+            CanCalculate = true;
+            OnPropertyChanged();
+        }
+    }
+
+    private bool canCalculate = false;
+    public bool CanCalculate
+    {
+        get { return canCalculate; }
+        set
+        {
+            canCalculate = value;
             OnPropertyChanged();
         }
     }

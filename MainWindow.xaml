@@ -4,31 +4,32 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Salesman problem" Width="1000" Height="1000" WindowState="Maximized">
+        Title="Salesman problem" Width="1500" Height="1000" WindowState="Maximized">
     <Grid Background="#333333">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="15*" />
-            <RowDefinition Height="85*" />
-        </Grid.RowDefinitions>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Grid.Column="1">
-                <Slider  Width="300" Minimum="4" Maximum="20" Value="{Binding NodesCount}"/>
-                <Label Content="{Binding NodesCount}" FontSize="20" HorizontalAlignment="Center" Foreground="White"/>
-                <Button Content="Draw" Foreground="White" Background="#222222" FontSize="25" Width="150" Height="auto"
-                        Click="DrawButton_Click" Margin="5"/>
-                <Button Content="Calculate" Foreground="White" Background="#222222" FontSize="25" Width="150" Height="auto"
-                        Click="CalculateButton_Click" Margin="5"/>
-            </StackPanel>
-            <StackPanel Grid.Column="2">
-                <TextBlock Text="{Binding Distance}" FontSize="20" Foreground="White" />
-            </StackPanel>
-        </Grid>
-       
-        <Canvas Grid.Row="1" x:Name="canvas" Background="White" Width="800" Height="800" HorizontalAlignment="Center"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="900" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0">
+            <Slider  Width="300" Minimum="4" Maximum="20" Value="{Binding NodesCount}"/>
+            <TextBlock Text="{Binding NodesCount, StringFormat='Number of points: {0}'}" FontSize="20" HorizontalAlignment="Center" Foreground="White"/>
+            <Button Content="Draw" Foreground="White" Background="#222222" FontSize="25" Width="150" Height="auto"
+                    Click="DrawButton_Click" Margin="5"/>
+            <Button Content="Calculate" Foreground="White" Background="#222222" FontSize="25" Width="150" Height="auto"
+                    Click="CalculateButton_Click" Margin="5" IsEnabled="{Binding CanCalculate}"/>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Column="1" >
+            <Canvas x:Name="canvas" Background="White" Width="800" Height="800" HorizontalAlignment="Center"
+                    Margin="0, 50, 0, 50"/>
+        </ScrollViewer>
+
+        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+            <TextBlock Text="{Binding Distance, StringFormat='Total distance:&#x0d;&#x0a; {0:#.0000}'}" FontSize="20" Foreground="White"
+                       Margin="40"/>
+        </StackPanel>
     </Grid>
 </Window>
