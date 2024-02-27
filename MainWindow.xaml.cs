@@ -4,6 +4,7 @@ using System.Windows.Media;
 using TravelingSalesman.ViewModel;
 using System.Windows.Shapes;
 using System.Windows.Controls;
+using TravelingSalesman.Services;
 
 namespace TravelingSalesman;
 
@@ -17,6 +18,12 @@ public partial class MainWindow : Window
         viewModel = new MainWindowViewModel();
         DataContext = viewModel;
         distance = null;
+        viewModel.DrawPath += ViewModel_DrawPath;
+    }
+
+    private void ViewModel_DrawPath(object? sender, System.EventArgs e)
+    {
+        DrawPath(((NewBestIndividualEventArgs)e).Path);
     }
 
     private void DrawButton_Click(object sender, RoutedEventArgs e)
@@ -28,9 +35,9 @@ public partial class MainWindow : Window
         DrawPath(path);
     }
 
-    private void CalculateButton_Click(object sender, RoutedEventArgs e)
+    private async void CalculateButton_Click(object sender, RoutedEventArgs e)
     {
-        List<Point> newPath = viewModel.ShortestPath();
+        List<Point> newPath = await viewModel.ShortestPath();
         if (distance == null || viewModel.Distance < distance)
         {
             distance = viewModel.Distance;

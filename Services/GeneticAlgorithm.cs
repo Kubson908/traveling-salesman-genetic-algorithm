@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Threading.Tasks;
 
 namespace TravelingSalesman.Services;
 
 public class GeneticAlgorithm
 {
     public List<List<Point>> population;
+    public event EventHandler? NewBestIndividual;
     readonly Random random;
     private readonly int populationCount = 250;
     private readonly float crossoverRate = 0.8f;
@@ -20,24 +22,66 @@ public class GeneticAlgorithm
         random = new();
     }
 
-    public List<List<Point>> RunAlgorithm(List<Point> points)
+    public async Task<List<List<Point>>> RunAlgorithm(List<Point> points, bool stepByStep)
     {
         population.Clear();
         population = GeneratePopulation(points);
-        List<double> fitnessProbs = FitnessProbability(population);
+        population[0] = points;
+
+        // Add first generation based on population
+        List<List<Point>> bestOfMixedList = AddNewGeneration(population);
+        List<Point> shortest = bestOfMixedList.MinBy(p => TotalDistance(p))!;
+        double shortestTotalDistance = TotalDistance(shortest);
+
+        // Add more generations and choose the best individuals
+        for (int i = 0; i < generations; i++)
+        {
+            bestOfMixedList = AddNewGeneration(bestOfMixedList);
+
+            List<int> oldPopulationIndices = Enumerable.Range(0, (int)(mutationRate * population.Count))
+                .Select(_ => random.Next(0, population.Count)).ToList();
+
+            foreach (int index in oldPopulationIndices)
+            {
+                bestOfMixedList.Add(population[index]);
+            }
+
+            bestOfMixedList = bestOfMixedList.OrderBy(_ => random.Next()).ToList();
+
+            if (stepByStep)
+            {
+
+                var newShortest = bestOfMixedList.MinBy(p => TotalDistance(p))!;
+                double newShortestTotalDistance = TotalDistance(newShortest);
+                if (shortestTotalDistance > newShortestTotalDistance)
+                {
+                    shortest = newShortest;
+                    shortestTotalDistance = newShortestTotalDistance;
+                    NewBestIndividualEventArgs args = new(shortest, shortestTotalDistance);
+                    NewBestIndividual?.Invoke(this, args);
+                    await Task.Delay(400);
+                }
+            }
+        }
+        return bestOfMixedList;
+    }
+
+    private List<List<Point>> AddNewGeneration(List<List<Point>> selection)
+    {
+        List<double> fitnessProbs = FitnessProbability(selection);
 
         List<List<Point>> parentsList = new();
 
         for (int i = 0; i < population.Count * crossoverRate; i++)
         {
-            parentsList.Add(Selection(fitnessProbs, population));
+            parentsList.Add(Selection(fitnessProbs, selection));
         }
 
         List<List<Point>> childrenList = new();
 
         for (int i = 0; i < parentsList.Count; i += 2)
         {
-            (List<Point> child1, List<Point> child2) = Crossover(parentsList[i], parentsList[i + 1], population);
+            (List<Point> child1, List<Point> child2) = Crossover(parentsList[i], parentsList[i + 1]);
             double mutate_threshold = random.NextDouble();
             if (mutate_threshold > (1 - mutationRate))
                 child1 = Mutation(child1);
@@ -57,52 +101,8 @@ public class GeneticAlgorithm
         List<int> sortedFitnessIndices = Enumerable.Range(0, mixedList.Count)
             .OrderByDescending(i => fitnessProbs[i]).ToList();
 
-        List<List<Point>> bestOfMixedList = sortedFitnessIndices.Take(population.Count)
+        return sortedFitnessIndices.Take(population.Count)
             .Select(i => mixedList[i]).ToList();
-
-        for (int i = 0; i < generations; i++)
-        {
-            fitnessProbs = FitnessProbability(bestOfMixedList);
-            parentsList.Clear();
-            for (int j = 0; j < crossoverRate * population.Count; j++)
-            {
-                parentsList.Add(Selection(fitnessProbs, bestOfMixedList));
-            }
-
-            childrenList.Clear();
-            for (int j = 0; j < parentsList.Count; j += 2)
-            {
-                (List<Point> child1, List<Point> child2) = Crossover(parentsList[j], parentsList[j + 1], bestOfMixedList);
-                double mutate_threshold = random.NextDouble();
-                if (mutate_threshold > (1 - mutationRate))
-                    child1 = Mutation(child1);
-
-                mutate_threshold = random.NextDouble();
-                if (mutate_threshold > (1 - mutationRate))
-                    child2 = Mutation(child2);
-
-                childrenList.Add(child1);
-                childrenList.Add(child2);
-            }
-
-            mixedList = parentsList.Concat(childrenList).ToList();
-            fitnessProbs.Clear();
-            fitnessProbs = FitnessProbability(mixedList);
-            sortedFitnessIndices = Enumerable.Range(0, mixedList.Count)
-                .OrderByDescending(i => fitnessProbs[i]).ToList();
-            bestOfMixedList = sortedFitnessIndices.Take((int)(crossoverRate * population.Count))
-                .Select(i => mixedList[i]).ToList();
-            List<int> oldPopulationIndices = Enumerable.Range(0, (int)(mutationRate * population.Count))
-                .Select(_ => random.Next(0, population.Count)).ToList();
-
-            foreach (int index in oldPopulationIndices)
-            {
-                bestOfMixedList.Add(population[index]);
-            }
-
-            bestOfMixedList = bestOfMixedList.OrderBy(_ => random.Next()).ToList();
-        }
-        return bestOfMixedList;
     }
 
     public List<List<Point>> GeneratePopulation(List<Point> points)
@@ -132,7 +132,7 @@ public class GeneticAlgorithm
             if (i == path.Count - 1)
                 totalDistance += Distance(path[i], path[0]);
             else
-                totalDistance += Distance(path[i], path[i+1]);
+                totalDistance += Distance(path[i], path[i + 1]);
         }
         return totalDistance;
     }
@@ -157,7 +157,7 @@ public class GeneticAlgorithm
         double randomValue = random.NextDouble();
 
         bool[] boolProbArray = new bool[cumsum.Length];
-        for (int i = 0; i< cumsum.Length; i++)
+        for (int i = 0; i < cumsum.Length; i++)
         {
             boolProbArray[i] = cumsum[i] < randomValue;
         }
@@ -166,7 +166,7 @@ public class GeneticAlgorithm
         return selectedIndex != -1 ? selection[selectedIndex] : selection[Array.IndexOf(cumsum, cumsum.Min())];
     }
 
-    public (List<Point>, List<Point>) Crossover(List<Point> parent1, List<Point> parent2, List<List<Point>> selection)
+    public (List<Point>, List<Point>) Crossover(List<Point> parent1, List<Point> parent2)
     {
         int maxCutIndex = parent1.Count - 1;
         int cutIndex = random.Next(1, maxCutIndex);
@@ -213,4 +213,18 @@ public class GeneticAlgorithm
         if (number == 1) return 1;
         return number * Factorial(number - 1);
     }
+}
+
+public class NewBestIndividualEventArgs : EventArgs
+{
+    private readonly List<Point> _path;
+    private readonly double _distance;
+
+    public NewBestIndividualEventArgs(List<Point> path, double distance)
+    {
+        _path = path;
+        _distance = distance;
+    }
+    public List<Point> Path { get { return _path; } }
+    public double Distance { get { return _distance; } }
 }

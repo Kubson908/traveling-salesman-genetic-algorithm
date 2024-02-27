@@ -13,13 +13,16 @@
         </Grid.ColumnDefinitions>
 
 
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0">
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Margin="15">
             <Slider  Width="300" Minimum="4" Maximum="20" Value="{Binding NodesCount}"/>
             <TextBlock Text="{Binding NodesCount, StringFormat='Number of points: {0}'}" FontSize="20" HorizontalAlignment="Center" Foreground="White"/>
             <Button Content="Draw" Foreground="White" Background="#222222" FontSize="25" Width="150" Height="auto"
                     Click="DrawButton_Click" Margin="5"/>
             <Button Content="Calculate" Foreground="White" Background="#222222" FontSize="25" Width="150" Height="auto"
                     Click="CalculateButton_Click" Margin="5" IsEnabled="{Binding CanCalculate}"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <CheckBox Content="Show steps" Foreground="White" FontSize="20" IsChecked="{Binding StepByStep}"/>
+            </StackPanel>
         </StackPanel>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Column="1" >
@@ -28,7 +31,7 @@
         </ScrollViewer>
 
         <StackPanel Grid.Column="2" VerticalAlignment="Center">
-            <TextBlock Text="{Binding Distance, StringFormat='Total distance:&#x0d;&#x0a; {0:#.0000}'}" FontSize="20" Foreground="White"
+            <TextBlock Text="{Binding Distance, StringFormat='Total distance:&#x0d;&#x0a;{0:#.0000}'}" FontSize="20" Foreground="White"
                        Margin="40"/>
         </StackPanel>
     </Grid>

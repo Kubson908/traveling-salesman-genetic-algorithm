@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using TravelingSalesman.MVVM;
 using TravelingSalesman.Services;
@@ -10,11 +11,19 @@ namespace TravelingSalesman.ViewModel;
 internal class MainWindowViewModel : BaseViewModel
 {
     private readonly GeneticAlgorithm geneticAlgorithm;
+    public event EventHandler? DrawPath;
     private List<Point> points;
     public MainWindowViewModel()
     {
         geneticAlgorithm = new();
         points = new();
+        geneticAlgorithm.NewBestIndividual += GeneticAlgorithm_NewBestIndividual;
+    }
+
+    private void GeneticAlgorithm_NewBestIndividual(object? sender, EventArgs e)
+    {
+        DrawPath?.Invoke(sender, e);
+        Distance = ((NewBestIndividualEventArgs)e).Distance;
     }
 
     private int nodesCount = 4;
@@ -51,6 +60,17 @@ internal class MainWindowViewModel : BaseViewModel
         }
     }
 
+    private bool stepByStep = false;
+    public bool StepByStep
+    {
+        get { return stepByStep; }
+        set
+        {
+            stepByStep = value;
+            OnPropertyChanged();
+        }
+    }
+
     public List<Point> GeneratePointArray()
     {
         var random = new Random();
@@ -65,9 +85,9 @@ internal class MainWindowViewModel : BaseViewModel
         return points;
     }
 
-    public List<Point> ShortestPath()
+    public async Task<List<Point>> ShortestPath()
     {
-        List<List<Point>> bestMixedChildren = geneticAlgorithm.RunAlgorithm(points);
+        List<List<Point>> bestMixedChildren = await geneticAlgorithm.RunAlgorithm(points, StepByStep);
 
         List<double> totalDistances = new();
         for (int i = 0; i < bestMixedChildren.Count; i++)
@@ -81,6 +101,7 @@ internal class MainWindowViewModel : BaseViewModel
         }
         int indexMin = totalDistances.IndexOf(minDistance);
         List<Point> shortestPath = bestMixedChildren[indexMin];
+        points = shortestPath;
         return shortestPath;
     }
 
