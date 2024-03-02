@@ -24,6 +24,7 @@ internal class MainWindowViewModel : BaseViewModel
     {
         DrawPath?.Invoke(sender, e);
         Distance = ((NewBestIndividualEventArgs)e).Distance;
+        CurrentGeneration = ((NewBestIndividualEventArgs)e).Generation;
     }
 
     private int nodesCount = 4;
@@ -44,7 +45,7 @@ internal class MainWindowViewModel : BaseViewModel
         set
         {
             distance = value;
-            CanCalculate = true;
+            CanCalculate = true && !IsBusy;
             OnPropertyChanged();
         }
     }
@@ -71,6 +72,28 @@ internal class MainWindowViewModel : BaseViewModel
         }
     }
 
+    private int generations = 200;
+    public int Generations
+    {
+        get { return generations; }
+        set
+        {
+            generations = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private int? currentGeneration = null;
+    public int? CurrentGeneration
+    {
+        get { return currentGeneration; }
+        set
+        {
+            currentGeneration = value;
+            OnPropertyChanged();
+        }
+    }
+
     public List<Point> GeneratePointArray()
     {
         var random = new Random();
@@ -87,7 +110,9 @@ internal class MainWindowViewModel : BaseViewModel
 
     public async Task<List<Point>> ShortestPath()
     {
-        List<List<Point>> bestMixedChildren = await geneticAlgorithm.RunAlgorithm(points, StepByStep);
+        IsBusy = true;
+        CurrentGeneration = null;
+        List<List<Point>> bestMixedChildren = await geneticAlgorithm.RunAlgorithm(points, StepByStep, Generations);
 
         List<double> totalDistances = new();
         for (int i = 0; i < bestMixedChildren.Count; i++)
@@ -102,6 +127,9 @@ internal class MainWindowViewModel : BaseViewModel
         int indexMin = totalDistances.IndexOf(minDistance);
         List<Point> shortestPath = bestMixedChildren[indexMin];
         points = shortestPath;
+        IsBusy = false;
+        CanCalculate = true;
+        CurrentGeneration = Generations;
         return shortestPath;
     }
 

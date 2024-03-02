@@ -11,4 +11,15 @@ internal class BaseViewModel : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
+    private bool isBusy;
+    public bool IsBusy
+    {
+        get { return isBusy; }
+        set
+        {
+            isBusy = value;
+            OnPropertyChanged();
+        }
+    }
 }

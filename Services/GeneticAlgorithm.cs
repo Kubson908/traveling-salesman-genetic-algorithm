@@ -13,8 +13,8 @@ public class GeneticAlgorithm
     readonly Random random;
     private readonly int populationCount = 250;
     private readonly float crossoverRate = 0.8f;
-    private readonly float mutationRate = 0.2f;
-    private readonly int generations = 200;
+    private readonly float mutationRate = 0.2f;/*
+    private readonly int generations = 200;*/
 
     public GeneticAlgorithm()
     {
@@ -22,7 +22,7 @@ public class GeneticAlgorithm
         random = new();
     }
 
-    public async Task<List<List<Point>>> RunAlgorithm(List<Point> points, bool stepByStep)
+    public async Task<List<List<Point>>> RunAlgorithm(List<Point> points, bool stepByStep, int generations)
     {
         population.Clear();
         population = GeneratePopulation(points);
@@ -57,7 +57,7 @@ public class GeneticAlgorithm
                 {
                     shortest = newShortest;
                     shortestTotalDistance = newShortestTotalDistance;
-                    NewBestIndividualEventArgs args = new(shortest, shortestTotalDistance);
+                    NewBestIndividualEventArgs args = new(shortest, shortestTotalDistance, i + 1);
                     NewBestIndividual?.Invoke(this, args);
                     await Task.Delay(400);
                 }
@@ -219,12 +219,15 @@ public class NewBestIndividualEventArgs : EventArgs
 {
     private readonly List<Point> _path;
     private readonly double _distance;
+    private readonly int _generation;
 
-    public NewBestIndividualEventArgs(List<Point> path, double distance)
+    public NewBestIndividualEventArgs(List<Point> path, double distance, int generation)
     {
         _path = path;
         _distance = distance;
+        _generation = generation;
     }
     public List<Point> Path { get { return _path; } }
     public double Distance { get { return _distance; } }
+    public int Generation { get { return _generation; } }
 }
